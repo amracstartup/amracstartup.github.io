@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Tyche Platform</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.0/semantic.min.css">
+</head>
+
+<style>
+    .banner {
+        display:table;
+        color: white;
+        text-align: center;
+        height: 15%;
+        width: 100%;
+        vertical-align: middle;
+    }
+
+    .label_style {
+        border-radius: 10%;
+        text-align: center;
+        border-style: groove;
+        padding: 20%;
+    }
+
+    .input_style{
+        font-size: 200%;
+    }
+</style>
+
+
+
+<body>
+<div style="height:30%"></div>
+<div style="text-align: center">
+    <label style="font-size:450%">AMRAC</label>
+    <br><br>
+    <label style="font-size:150%">Transparent Donations for a Better World.</label>
+    <br><br>
+</div>
+<div class="ui stackable three column grid">
+    <div class="column"></div>
+    <div class="column">
+        
+
+        <form class="ui form">
+                <div class="field">
+                    <!-- <div class="ui blue fluid huge pointing below label">Donate to Amrac</div> -->
+                    <div class="ui labeled input">
+                        <label for="ether_amount" class="ui label">ETH</label>
+                        <input id="ether_amount" type="number" name="tycheamount" placeholder=0 onkeyup="getEtherAmount()" min=0 step="0.1">
+                        <button class="ui big blue fluid button" id="setvalues" type="button" onclick="sendEther()">Donate</button>
+                    </div>
+                </div>
+        </form>
+        
+        <br>
+        <br>
+        <div style="height:30%"></div>
+        <div style="text-align: center; font-size:150%">Your Karma</div>
+        <div style="height:35%"></div>
+        <div id="karma" style="text-align:center; font-size:350%"><label>0 ETH</label></div>
+    </div>
+    <div class="column"></div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.0/semantic.min.js" ></script>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+
+
+
+
+
+
+<script>
+        //window.addEventListener('load', function() {
+        // Check if Web3 has been injected by the browser:
+        if (typeof web3 !== 'undefined') {
+          web3 = new Web3(web3.currentProvider);
+        } else {
+          // set the provider you want from Web3.providers
+          web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+        }
+
+        web3.eth.defaultAccount = web3.eth.accounts[0];
+        var ABI =    [
+                    {
+                        "anonymous": false,
+                        "inputs": [
+                            {
+                                "indexed": false,
+                                "name": "contributor",
+                                "type": "address"
+                            },
+                            {
+                                "indexed": false,
+                                "name": "amunt",
+                                "type": "uint256"
+                            }
+                        ],
+                        "name": "Voters",
+                        "type": "event"
+                    },
+                    {
+                        "constant": false,
+                        "inputs": [
+                            {
+                                "name": "_spender",
+                                "type": "address"
+                            },
+                            {
+                                "name": "amount",
+                                "type": "uint256"
+                            }
+                        ],
+                        "name": "approval",
+                        "outputs": [
+                            {
+                                "name": "",
+                                "type": "bool"
+                            }
+                        ],
+                        "payable": false,
+                        "stateMutability": "nonpayable",
+                        "type": "function"
+                    },
+                    {
+                        "anonymous": false,
+                        "inputs": [
+                            {
+                                "indexed": false,
+                                "name": "from",
+                                "type": "address"
+                            },
+                            {
+                                "indexed": false,
+                                "name": "to",
+                                "type": "address"
+                            },
+                            {
+                                "indexed": false,
+                                "name": "amount",
+                                "type": "uint256"
+                            }
+                        ],
+                        "name": "Transfer",
+                        "type": "event"
+                    },
+                    {
+                        "constant": false,
+                        "inputs": [
+                            {
+                                "name": "_expirationDate",
+                                "type": "uint256"
+                            }
+                        ],
+                        "name": "completeCampaign",
+                        "outputs": [],
+                        "payable": false,
+                        "stateMutability": "nonpayable",
+                        "type": "function"
+                    },
+                    {
+                        "constant": false,
+                        "inputs": [
+                            {
+                                "name": "_expirationDate",
+                                "type": "uint256"
+                            }
+                        ],
+                        "name": "createProject",
+                        "outputs": [],
+                        "payable": false,
+                        "stateMutability": "nonpayable",
+                        "type": "function"
+                    },
+                    {
+                        "constant": false,
+                        "inputs": [],
+                        "name": "kill",
+                        "outputs": [],
+                        "payable": false,
+                        "stateMutability": "nonpayable",
+                        "type": "function"
+                    },
+                    {
+                        "constant": false,
+                        "inputs": [
+                            {
+                                "name": "to",
+                                "type": "address"
+                            },
+                            {
+                                "name": "amount",
+                                "type": "uint256"
+                            }
+                        ],
+                        "name": "transfer",
+                        "outputs": [],
+                        "payable": false,
+                        "stateMutability": "nonpayable",
+                        "type": "function"
+                    },
+                    {
+                        "constant": false,
+                        "inputs": [
+                            {
+                                "name": "projectId",
+                                "type": "uint256"
+                            },
+                            {
+                                "name": "amount",
+                                "type": "uint256"
+                            }
+                        ],
+                        "name": "vote",
+                        "outputs": [],
+                        "payable": false,
+                        "stateMutability": "nonpayable",
+                        "type": "function"
+                    },
+                    {
+                        "inputs": [],
+                        "payable": false,
+                        "stateMutability": "nonpayable",
+                        "type": "constructor"
+                    },
+                    {
+                        "payable": true,
+                        "stateMutability": "payable",
+                        "type": "fallback"
+                    },
+                    {
+                        "constant": true,
+                        "inputs": [
+                            {
+                                "name": "",
+                                "type": "address"
+                            },
+                            {
+                                "name": "",
+                                "type": "address"
+                            }
+                        ],
+                        "name": "allowance",
+                        "outputs": [
+                            {
+                                "name": "",
+                                "type": "uint256"
+                            }
+                        ],
+                        "payable": false,
+                        "stateMutability": "view",
+                        "type": "function"
+                    },
+                    {
+                        "constant": true,
+                        "inputs": [
+                            {
+                                "name": "",
+                                "type": "address"
+                            }
+                        ],
+                        "name": "balanceOf",
+                        "outputs": [
+                            {
+                                "name": "",
+                                "type": "uint256"
+                            }
+                        ],
+                        "payable": false,
+                        "stateMutability": "view",
+                        "type": "function"
+                    },
+                    {
+                        "constant": true,
+                        "inputs": [],
+                        "name": "currentSupply",
+                        "outputs": [
+                            {
+                                "name": "",
+                                "type": "uint256"
+                            }
+                        ],
+                        "payable": false,
+                        "stateMutability": "view",
+                        "type": "function"
+                    },
+                    {
+                        "constant": true,
+                        "inputs": [
+                            {
+                                "name": "",
+                                "type": "uint256"
+                            }
+                        ],
+                        "name": "isProject",
+                        "outputs": [
+                            {
+                                "name": "",
+                                "type": "bool"
+                            }
+                        ],
+                        "payable": false,
+                        "stateMutability": "view",
+                        "type": "function"
+                    },
+                    {
+                        "constant": true,
+                        "inputs": [],
+                        "name": "name",
+                        "outputs": [
+                            {
+                                "name": "",
+                                "type": "string"
+                            }
+                        ],
+                        "payable": false,
+                        "stateMutability": "view",
+                        "type": "function"
+                    },
+                    {
+                        "constant": true,
+                        "inputs": [],
+                        "name": "projectCount",
+                        "outputs": [
+                            {
+                                "name": "",
+                                "type": "uint256"
+                            }
+                        ],
+                        "payable": false,
+                        "stateMutability": "view",
+                        "type": "function"
+                    },
+                    {
+                        "constant": true,
+                        "inputs": [
+                            {
+                                "name": "",
+                                "type": "uint256"
+                            }
+                        ],
+                        "name": "Projects",
+                        "outputs": [
+                            {
+                                "name": "id",
+                                "type": "uint256"
+                            },
+                            {
+                                "name": "expirationDate",
+                                "type": "uint256"
+                            },
+                            {
+                                "name": "votes",
+                                "type": "uint256"
+                            }
+                        ],
+                        "payable": false,
+                        "stateMutability": "view",
+                        "type": "function"
+                    },
+                    {
+                        "constant": true,
+                        "inputs": [],
+                        "name": "symbol",
+                        "outputs": [
+                            {
+                                "name": "",
+                                "type": "string"
+                            }
+                        ],
+                        "payable": false,
+                        "stateMutability": "view",
+                        "type": "function"
+                    },
+                    {
+                        "constant": true,
+                        "inputs": [],
+                        "name": "tokenPrice",
+                        "outputs": [
+                            {
+                                "name": "",
+                                "type": "uint256"
+                            }
+                        ],
+                        "payable": false,
+                        "stateMutability": "view",
+                        "type": "function"
+                    }
+                ]
+
+        
+        var contrato = web3.eth.contract(ABI)
+        var amracContract = contrato.at('0x19ec8972a3bc5b47636a6785ed36d2fcb7eabe30')
+        console.log(amracContract)
+        displayKarma()
+       
+        //})
+          
+        function sendEther(){
+            var etherAmount = web3.toBigNumber($("#ether_amount").val());
+            console.log(etherAmount);
+            var weiValue = web3.toWei(etherAmount,'ether');
+            txhash = web3.eth.sendTransaction({to:'0x19ec8972a3bc5b47636a6785ed36d2fcb7eabe30', value: weiValue},function(err,result){
+                    if(!err){
+                        console.log(result);
+                    }else{
+                        console.log(err);
+                    }
+                }
+            )
+        }
+
+
+        // Get the price of the token
+        function displayKarma(){
+        amracContract.balanceOf(web3.eth.accounts[0],function(error, result){
+            if (!error){
+                console.log(result)
+                $("#karma").html(result.dividedBy(1e18).toString(10) + ' AMR')
+            } else{
+              window.alarm('Error')
+            }
+          })
+        }
+
+        function getTokenAmount() {
+            var priceValue = web3.toBigNumber($("#tyche_price").val());
+            var ethValue = web3.toBigNumber($("#eth_amount").val());
+            var tycheValue = ethValue.dividedBy(priceValue).round(2);
+            $("#tyche_amount").val(tycheValue.toString(10));
+         }
+
+        function getEtherAmount() {
+        var priceValue = web3.toBigNumber($("#tyche_price").val());
+        var tycheValue = web3.toBigNumber($("#tyche_amount").val());
+        var ethValue = priceValue.times(tycheValue).round(2);
+        $("#eth_amount").val(ethValue.toString(10));
+        }
+     
+    
+        //})
+      </script>
+</body>
+</html>
